@@ -120,6 +120,22 @@ The MTA provisions `xsuaa`, and binds the existing `destination` +
 the Cloud Connector. Persistence is self-seeding in-memory SQLite (PoC); swap to
 HANA HDI when entitlement is available.
 
+## Deployed instance & test results
+
+The PoC is **deployed and smoke-tested** on BTP CF (org NUS / space `dev`) against
+the **live SHD250** system and **live SAP AI Core** (gpt-4o orchestration,
+deployment `d2929a33e5abf95d`). All 9 scenario groups passed — see
+[`TEST_REPORT.md`](TEST_REPORT.md).
+
+| App | URL |
+|---|---|
+| Fiori UI (app router) | `https://…dev-f2071c1a0.cfapps.ap11.hana.ondemand.com` |
+| OData service | `https://…dev-f24bebb6d.cfapps.ap11.hana.ondemand.com/journal` |
+
+Run modes in the deployment: `MASTERDATA_MODE=live`, `ORCHESTRATION_MODE=live`,
+`POSTING_MODE=stub` (no real FI documents created while unattended). Re-run the
+suite with `node test/run-e2e.js` (see header for required env).
+
 ## Acceptance criteria status
 
 1. ✅ Upload guidance + Excel → proposal with per-line grounding + confidence.

@@ -1,22 +1,22 @@
 const cds = require('@sap/cds');
 
 /**
- * PoC persistence bootstrap. There is no HANA entitlement in this subaccount,
- * so we run on a file-based SQLite inside the (ephemeral) app container. Unlike
- * the dev profile, the production runtime does NOT auto-create tables, so we
- * deploy the schema + CSV seed data once at startup.
+ * PoC persistence note. There is no HANA entitlement in this subaccount, so we
+ * run on a file-based SQLite inside the (ephemeral) app container. The schema
+ * (incl. draft tables) and CSV seed data are pre-deployed into `db.sqlite` at
+ * BUILD time (see mta.yaml before-all: `cds deploy --to sqlite:gen/srv/db.sqlite`),
+ * because the production runtime does not auto-create tables.
  *
- * Swap `db` to HANA HDI when entitlement is available and this hook becomes a no-op.
+ * Swap `db` to HANA HDI when entitlement is available; this file can then go.
  */
 cds.once('served', async () => {
-  const db = cds.requires?.db;
-  if (db?.kind !== 'sqlite') return;
+  if (cds.requires?.db?.kind !== 'sqlite') return;
   const log = cds.log('bootstrap');
   try {
-    await cds.deploy(cds.model).to(cds.db);
-    log.info('schema + seed data deployed to sqlite', db.credentials?.url);
+    const n = await cds.db.run(SELECT.one`count(*) as n`.from('journal.upload.GuidanceDocs'));
+    log.info('sqlite ready — GuidanceDocs seed rows:', n && n.n);
   } catch (e) {
-    log.error('startup auto-deploy failed:', e.message);
+    log.error('sqlite not seeded (expected pre-deployed db.sqlite):', e.message);
   }
 });
 

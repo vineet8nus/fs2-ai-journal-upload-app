@@ -17,6 +17,9 @@ build-parameters:
         # /journalui -> srv-api.
         - mkdir -p gen/srv/app
         - cp -r app/journalui gen/srv/app/journalui
+        # pre-seed sqlite (schema incl. draft tables + CSV data) into the srv
+        # module — the production runtime does not auto-create tables.
+        - npx cds deploy --to sqlite:gen/srv/db.sqlite
 
 modules:
   # ---- CAP service (OData V4 + Fiori app static content) ------------------
