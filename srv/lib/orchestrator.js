@@ -10,7 +10,8 @@ const { executeHttpRequest } = require('@sap-cloud-sdk/http-client');
  * arithmetic and existence are handled deterministically downstream (§7).
  *
  * ORCHESTRATION_MODE=stub (default) | live
- *   live  -> SAP AI Core Generative AI Hub orchestration deployment
+ *   live  -> SAP AI Core Generative AI Hub orchestration deployment, reached via
+ *            the bound `aicore` service credentials (VCAP) — most reliable.
  *   stub  -> deterministic heuristic proposal (keeps the full flow runnable)
  */
 const MODE = process.env.ORCHESTRATION_MODE || 'stub';
@@ -18,6 +19,28 @@ const AICORE_DEST = process.env.AICORE_DESTINATION || 'ai-core-destination';
 const RESOURCE_GROUP = process.env.AICORE_RESOURCE_GROUP || 'default';
 const ORCH_DEPLOYMENT = process.env.AICORE_ORCH_DEPLOYMENT; // orchestration deployment id
 const LOG = cds.log('orchestration');
+
+/** Read AI Core credentials from the bound `aicore` service (VCAP_SERVICES). */
+function aicoreBinding() {
+  try {
+    const vcap = JSON.parse(process.env.VCAP_SERVICES || '{}');
+    const b = (vcap.aicore || [])[0];
+    return b ? b.credentials : null;
+  } catch { return null; }
+}
+
+let tokenCache = { token: null, exp: 0 };
+async function aicoreToken(cred) {
+  if (tokenCache.token && Date.now() < tokenCache.exp) return tokenCache.token;
+  const auth = Buffer.from(`${cred.clientid}:${cred.clientsecret}`).toString('base64');
+  const r = await fetch(`${cred.url}/oauth/token?grant_type=client_credentials`, {
+    method: 'POST', headers: { Authorization: `Basic ${auth}` }
+  });
+  if (!r.ok) throw new Error(`AI Core token HTTP ${r.status}`);
+  const j = await r.json();
+  tokenCache = { token: j.access_token, exp: Date.now() + (j.expires_in - 60) * 1000 };
+  return tokenCache.token;
+}
 
 const SYSTEM_PROMPT = `You are a finance posting assistant. You receive a posting GUIDANCE policy and parsed DATA rows.
 For EACH data row produce one journal line as JSON with fields:
@@ -55,18 +78,33 @@ async function callOrchestration(guidanceText, mappingRules, rows) {
     },
     input_params: { user: buildUserPrompt(guidanceText, mappingRules, rows) }
   };
-  const res = await executeHttpRequest(
-    { destinationName: AICORE_DEST },
-    {
-      method: 'post',
-      url: `/v2/inference/deployments/${ORCH_DEPLOYMENT}/completion`,
-      headers: { 'AI-Resource-Group': RESOURCE_GROUP, 'Content-Type': 'application/json' },
-      data: body
-    },
-    { fetchCsrfToken: false }
-  );
-  const content = res.data?.orchestration_result?.choices?.[0]?.message?.content
-    || res.data?.choices?.[0]?.message?.content;
+  const path = `/v2/inference/deployments/${ORCH_DEPLOYMENT}/completion`;
+  const cred = aicoreBinding();
+  let data;
+  if (cred) {
+    // Preferred: bound aicore service credentials (avoids destination URL drift).
+    const apiUrl = (cred.serviceurls && cred.serviceurls.AI_API_URL) || cred.AI_API_URL;
+    const token = await aicoreToken(cred);
+    const r = await fetch(`${apiUrl}${path}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'AI-Resource-Group': RESOURCE_GROUP, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error(`AI Core orchestration HTTP ${r.status}: ${(await r.text()).slice(0, 200)}`);
+    data = await r.json();
+  } else {
+    // Fallback: AI Core destination handles auth + base URL.
+    const res = await executeHttpRequest(
+      { destinationName: AICORE_DEST },
+      { method: 'post', url: path,
+        headers: { 'AI-Resource-Group': RESOURCE_GROUP, 'Content-Type': 'application/json' },
+        data: body },
+      { fetchCsrfToken: false }
+    );
+    data = res.data;
+  }
+  const content = data?.orchestration_result?.choices?.[0]?.message?.content
+    || data?.choices?.[0]?.message?.content;
   return JSON.parse(content);
 }
 

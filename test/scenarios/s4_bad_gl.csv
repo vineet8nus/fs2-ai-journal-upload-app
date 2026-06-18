@@ -1,0 +1,3 @@
+Description,GLAccount,Amount,CompanyCode,CostCenter,Currency,DebitCredit
+Suspicious expense,0000999999,1000,SG01,C000000301,SGD,S
+Bank clearing offset,0000113100,1000,SG01,,SGD,H

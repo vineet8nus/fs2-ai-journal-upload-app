@@ -37,6 +37,15 @@ modules:
       - name: fs2-journal-xsuaa
       - name: fs2-journal-destination
       - name: fs2-journal-connectivity
+      - name: fs2-journal-aicore
+    properties:
+      MASTERDATA_MODE: live
+      ORCHESTRATION_MODE: live
+      POSTING_MODE: stub
+      AICORE_ORCH_DEPLOYMENT: d2929a33e5abf95d
+      AICORE_RESOURCE_GROUP: default
+      DEFAULT_COMPANY_CODE: 'SG01'
+      DEFAULT_CURRENCY: SGD
 
   # ---- Application router -------------------------------------------------
   - name: fs2-journal-approuter
@@ -78,3 +87,9 @@ resources:
     parameters:
       service: connectivity
       service-plan: lite
+
+  # Reuse the existing AI Core (Generative AI Hub) instance for orchestration.
+  - name: fs2-journal-aicore
+    type: org.cloudfoundry.existing-service
+    parameters:
+      service-name: default_aicore
