@@ -1,0 +1,59 @@
+{
+  "name": "fs2-ai-journal-upload-app",
+  "version": "1.0.0",
+  "description": "AI-Assisted Journal Upload (PoC) — CAP + Fiori Elements + SAP AI Core",
+  "dependencies": {
+    "@sap/cds": "^9",
+    "@sap/xssec": "^4",
+    "@sap-cloud-sdk/connectivity": "^4",
+    "@sap-cloud-sdk/http-client": "^4",
+    "@sap-cloud-sdk/resilience": "^4",
+    "express": "^4",
+    "xlsx": "^0.18.5",
+    "@cap-js/sqlite": "^2.4"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch": "cds watch"
+  },
+  "private": true,
+  "engines": {
+    "node": "22.x"
+  },
+  "cds": {
+    "requires": {
+      "auth": {
+        "[development]": {
+          "kind": "mocked",
+          "users": {
+            "alice": { "roles": [ "JournalUploader", "JournalApprover", "authenticated-user" ] },
+            "bob":   { "roles": [ "JournalUploader", "authenticated-user" ] }
+          }
+        },
+        "[production]": { "kind": "xsuaa" }
+      },
+      "db": {
+        "[development]": { "kind": "sqlite", "credentials": { "url": "db.sqlite" } },
+        "[production]": { "kind": "sqlite", "credentials": { "url": ":memory:" } }
+      },
+      "API_JOURNALENTRYITEMBASIC_SRV": {
+        "kind": "odata-v2",
+        "model": "srv/external/API_JOURNALENTRYITEMBASIC_SRV",
+        "credentials": {
+          "destination": "SHD250SYSTEM",
+          "path": "/sap/opu/odata/sap/API_JOURNALENTRYITEMBASIC_SRV"
+        }
+      },
+      "GL_POSTING": {
+        "kind": "rest",
+        "credentials": {
+          "destination": "SHD250SYSTEM",
+          "path": "/sap/opu/odata/sap/ZFAC_GL_DOCUMENT_POST_SRV"
+        }
+      }
+    },
+    "features": {
+      "fetch_csrf": true
+    }
+  }
+}

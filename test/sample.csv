@@ -1,0 +1,4 @@
+Description,Amount,CompanyCode,CostCenter,Currency,DebitCredit
+Marketing campaign Q2 advertising,1000,1010,0010101101,SGD,S
+Software subscription renewal,500,1010,0010101101,SGD,S
+Bank clearing offset,1500,1010,,SGD,H

@@ -1,0 +1,37 @@
+{
+  "xsappname": "fs2-journal-upload",
+  "tenant-mode": "dedicated",
+  "description": "Security profile for AI-Assisted Journal Upload",
+  "scopes": [
+    { "name": "$XSAPPNAME.JournalUploader", "description": "Upload data and generate/validate proposals" },
+    { "name": "$XSAPPNAME.JournalApprover", "description": "Approve/reject and post journals" }
+  ],
+  "attributes": [],
+  "role-templates": [
+    {
+      "name": "JournalUploader",
+      "description": "Journal Uploader",
+      "scope-references": [ "$XSAPPNAME.JournalUploader" ]
+    },
+    {
+      "name": "JournalApprover",
+      "description": "Journal Approver",
+      "scope-references": [ "$XSAPPNAME.JournalUploader", "$XSAPPNAME.JournalApprover" ]
+    }
+  ],
+  "role-collections": [
+    {
+      "name": "JournalUpload_Uploader",
+      "description": "Journal Upload — Uploader",
+      "role-template-references": [ "$XSAPPNAME.JournalUploader" ]
+    },
+    {
+      "name": "JournalUpload_Approver",
+      "description": "Journal Upload — Approver",
+      "role-template-references": [ "$XSAPPNAME.JournalApprover" ]
+    }
+  ],
+  "oauth2-configuration": {
+    "redirect-uris": [ "https://*.cfapps.ap11.hana.ondemand.com/**" ]
+  }
+}

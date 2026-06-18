@@ -1,0 +1,130 @@
+{
+  "_version": "1.65.0",
+  "sap.app": {
+    "id": "journal.upload.ui",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": { "version": "1.0.0" },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "dataSources": {
+      "mainService": {
+        "uri": "/journal/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "4.0",
+          "localUri": "localService/metadata.xml"
+        }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "journal-upload-inbound": {
+          "semanticObject": "JournalUpload",
+          "action": "manage",
+          "title": "{{appTitle}}",
+          "signature": { "parameters": {}, "additionalParameters": "allowed" }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": { "icon": "sap-icon://accounting-document-verification" },
+    "deviceTypes": { "desktop": true, "tablet": true, "phone": true },
+    "theme": "sap_horizon"
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": { "bundleName": "journal.upload.ui.i18n.i18n" }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      }
+    },
+    "resources": { "css": [] },
+    "routing": {
+      "config": {
+        "routerClass": "sap.fe.core.AppComponent"
+      },
+      "routes": [
+        {
+          "pattern": ":?query:",
+          "name": "CasesList",
+          "target": "CasesList"
+        },
+        {
+          "pattern": "Cases({key}):?query:",
+          "name": "CasesObjectPage",
+          "target": "CasesObjectPage"
+        },
+        {
+          "pattern": "Cases({key})/proposal(p_={p_})/lines({key2}):?query:",
+          "name": "ProposalLineObjectPage",
+          "target": "ProposalLineObjectPage"
+        }
+      ],
+      "targets": {
+        "CasesList": {
+          "type": "Component",
+          "id": "CasesList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "contextPath": "/Cases",
+              "variantManagement": "Page",
+              "initialLoad": "Enabled",
+              "navigation": {
+                "Cases": { "detail": { "route": "CasesObjectPage" } }
+              }
+            }
+          }
+        },
+        "CasesObjectPage": {
+          "type": "Component",
+          "id": "CasesObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "contextPath": "/Cases",
+              "navigation": {
+                "proposal/lines": { "detail": { "route": "ProposalLineObjectPage" } }
+              }
+            }
+          }
+        },
+        "ProposalLineObjectPage": {
+          "type": "Component",
+          "id": "ProposalLineObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": { "contextPath": "/Cases/proposal/lines" }
+          }
+        }
+      }
+    },
+    "contentDensities": { "compact": true, "cozy": true }
+  },
+  "sap.fiori": {
+    "registrationIds": [],
+    "archeType": "transactional"
+  }
+}
