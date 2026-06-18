@@ -34,7 +34,7 @@
       },
       "db": {
         "[development]": { "kind": "sqlite", "credentials": { "url": "db.sqlite" } },
-        "[production]": { "kind": "sqlite", "credentials": { "url": ":memory:" } }
+        "[production]": { "kind": "sqlite", "credentials": { "url": "db.sqlite" } }
       },
       "API_JOURNALENTRYITEMBASIC_SRV": {
         "kind": "odata-v2",

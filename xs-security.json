@@ -7,6 +7,10 @@
     { "name": "$XSAPPNAME.JournalApprover", "description": "Approve/reject and post journals" }
   ],
   "attributes": [],
+  "authorities": [
+    "$XSAPPNAME.JournalUploader",
+    "$XSAPPNAME.JournalApprover"
+  ],
   "role-templates": [
     {
       "name": "JournalUploader",

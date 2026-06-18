@@ -24,10 +24,13 @@ service JournalService @(path: '/journal', requires: 'authenticated-user') {
     @Common.SideEffects: { TargetEntities: ['proposal', 'proposal/lines'] }
     action validateProposal()  returns Cases;
     action submitForApproval() returns Cases;
-    action approve()           returns Cases        @(requires: 'JournalApprover');
-    action rejectCase(reason: String) returns Cases @(requires: 'JournalApprover');
+    @(requires: 'JournalApprover')
+    action approve()           returns Cases;
+    @(requires: 'JournalApprover')
+    action rejectCase(reason: String) returns Cases;
     @Common.SideEffects: { TargetEntities: ['/Cases'] }
-    action postJournal()        returns Cases        @(requires: 'JournalApprover');
+    @(requires: 'JournalApprover')
+    action postJournal()        returns Cases;
   };
 
   entity Proposals     as projection on ju.Proposals;
